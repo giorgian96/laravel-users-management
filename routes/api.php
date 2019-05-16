@@ -38,10 +38,10 @@ Route::middleware('auth:api')->get('users', 'UserManagementController@index');
 Route::middleware('auth:api')->get('user/{id}', 'UserManagementController@show');
 
 // Create new user
-Route::middleware('auth:api')->post('user', 'UserManagementController@store');
+Route::middleware('auth:api')->post('user/create', 'UserManagementController@create');
 
 // Update user
-Route::middleware('auth:api')->put('user', 'UserManagementController@store');
+Route::middleware('auth:api')->put('user/update/{id}', 'UserManagementController@update');
 
 // Delete user
-Route::middleware('auth:api')->delete('user/{id}', 'UserManagementController@destroy');
+Route::middleware('auth:api')->delete('user/delete/{id}', 'UserManagementController@destroy');

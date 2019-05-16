@@ -32,27 +32,10 @@ class UserManagementController extends Controller
         }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function store(Request $request)
+    // Create new user
+    public function create(Request $request)
     {
-        $user;
-
-        if($request->isMethod('put')){
-            // If we update an existing user
-            $user = User::findOrFail($request->user_id);
-
-            $user->id = $request->input('user_id');
-            $user->name = $request->input('name');
-            $user->email = $request->input('email');
-            $user->password = bcrypt($request->input('password'));
-            // $user->api_token = Str::random(60);
-        }else{
-            // If we create a new user
+        if(Gate::allows('is-admin')){
             $user = new User;
 
             $this->validate($request, [
@@ -65,11 +48,37 @@ class UserManagementController extends Controller
             $user->email = $request->input('email');
             $user->password = bcrypt($request->input('password'));
             // $user->api_token = Str::random(60);
-            $user->type = User::DEFAULT_TYPE;
-        }        
+            $user->type = User::DEFAULT_TYPE;       
 
-        if($user->save()){
-            return new UserResource($user);
+            if($user->save()){
+                return new UserResource($user);
+            }
+        }else if(Gate::denies('is-admin')){
+            return response()->json([
+                'error' => 'You need to be an administrator to do this',
+                'code' => 401,
+            ], 401);
+        }
+    }
+
+    // Update existing user
+    public function update(Request $request, $id){
+        if(Gate::allows('is-admin')){
+            $user = User::findOrFail($id);
+
+            $user->name = $request->input('name');
+            $user->email = $request->input('email');
+            $user->password = bcrypt($request->input('password'));
+            // $user->api_token = Str::random(60);
+
+            if($user->save()){
+                return new UserResource($user);
+            }
+        }else if(Gate::denies('is-admin')){
+            return response()->json([
+                'error' => 'You need to be an administrator to do this',
+                'code' => 401,
+            ], 401);
         }
     }
 
@@ -81,11 +90,18 @@ class UserManagementController extends Controller
      */
     public function show($id)
     {
-        // Get user
-        $user = User::findOrFail($id);
+        if(Gate::allows('is-admin')){
+            // Get user
+            $user = User::findOrFail($id);
 
-        // Return the user as resource
-        return new UserResource($user);
+            // Return the user as resource
+            return new UserResource($user);
+        }else if(Gate::denies('is-admin')){
+            return response()->json([
+                'error' => 'You need to be an administrator to do this',
+                'code' => 401,
+            ], 401);
+        }        
     }
 
     /**
@@ -96,13 +112,20 @@ class UserManagementController extends Controller
      */
     public function destroy($id)
     {
-        // Get user
-        $user = User::findOrFail($id);
+        if(Gate::allows('is-admin')){
+            // Get user
+            $user = User::findOrFail($id);
 
-        // Delete user
-        if($user->delete()){
-            return new UserResource($user);
-        }
+            // Delete user
+            if($user->delete()){
+                return new UserResource($user);
+            }
+        }else if(Gate::denies('is-admin')){
+            return response()->json([
+                'error' => 'You need to be an administrator to do this',
+                'code' => 401,
+            ], 401);
+        }        
     }
 
     // Login to the application
